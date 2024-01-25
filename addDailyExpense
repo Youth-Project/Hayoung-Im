@@ -1,0 +1,10 @@
+const addDailyExpense = async (date, expenseData) => {
+  try {
+    const dailyExpenseRef = db.collection('dailyExpenses').doc(date);
+    await dailyExpenseRef.set(expenseData);
+    return true;
+  } catch (error) {
+    console.error('Error adding daily expense:', error);
+    return false;
+  }
+};
