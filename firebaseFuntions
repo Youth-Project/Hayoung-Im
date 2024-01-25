@@ -76,6 +76,42 @@ const getDailyExpense = async (date) => {
   }
 };
 
+// getGraphData
+const getGraphData = async (selectedPeriod) => {
+  try {
+    const graphDataRef = db.collection('graphData');
+
+    if (selectedPeriod === 'monthly6Months') {
+      // 도넛 그래프 데이터 가져오기
+      const donutGraphSnapshot = await graphDataRef.doc('monthly6MonthsDonutGraph').get();
+      const donutGraphData = donutGraphSnapshot.data();
+
+      // 꺾은선 그래프 데이터 가져오기
+      const lineGraphSnapshot = await graphDataRef.doc('monthly6MonthsLineGraph').get();
+      const lineGraphData = lineGraphSnapshot.data();
+
+      return { donutGraphData, lineGraphData };
+    } else if (selectedPeriod === 'monthly1Year') {
+      // 도넛 그래프 데이터 가져오기
+      const donutGraphSnapshot = await graphDataRef.doc('monthly1YearDonutGraph').get();
+      const donutGraphData = donutGraphSnapshot.data();
+
+      // 꺾은선 그래프 데이터 가져오기
+      const lineGraphSnapshot = await graphDataRef.doc('monthly1YearLineGraph').get();
+      const lineGraphData = lineGraphSnapshot.data();
+
+      return { donutGraphData, lineGraphData };
+    } else {
+      console.error('Invalid selectedPeriod:', selectedPeriod);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting graph data:', error);
+    return null;
+  }
+};
+
+
 // 예시
 const exampleDailyExpenseData = {
   amount: 3,
