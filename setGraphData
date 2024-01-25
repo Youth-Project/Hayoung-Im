@@ -1,0 +1,10 @@
+const setGraphData = async (userId, selectedPeriod, graphData) => {
+  try {
+    const graphDataRef = db.collection('users').doc(userId).collection('graphData').doc(selectedPeriod);
+    await graphDataRef.set(graphData);
+    return true;
+  } catch (error) {
+    console.error('Error setting graph data:', error);
+    return false;
+  }
+};
