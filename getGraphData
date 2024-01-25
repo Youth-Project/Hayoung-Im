@@ -1,0 +1,9 @@
+const getGraphData = async (userId, selectedPeriod) => {
+  try {
+    const graphDataDoc = await db.collection('users').doc(userId).collection('graphData').doc(selectedPeriod).get();
+    return graphDataDoc.exists ? graphDataDoc.data() : null;
+  } catch (error) {
+    console.error('Error getting graph data:', error);
+    return null;
+  }
+};
