@@ -1,0 +1,9 @@
+const getWeeklyExpenses = async (date) => {
+  try {
+    const weeklyExpenseDoc = await db.collection('weeklyExpenses').doc(date).get();
+    return weeklyExpenseDoc.exists ? weeklyExpenseDoc.data() : null;
+  } catch (error) {
+    console.error('Error getting weekly expenses:', error);
+    return null;
+  }
+};
