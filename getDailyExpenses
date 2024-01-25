@@ -1,0 +1,9 @@
+const getDailyExpenses = async (date) => {
+  try {
+    const dailyExpenseDoc = await db.collection('dailyExpenses').doc(date).get();
+    return dailyExpenseDoc.exists ? dailyExpenseDoc.data() : null;
+  } catch (error) {
+    console.error('Error getting daily expenses:', error);
+    return null;
+  }
+};
