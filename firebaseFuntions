@@ -1,0 +1,156 @@
+const admin = require('firebase-admin');
+const serviceAccount = require('serviceAccountKey경로 추가.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: '진짜 db URL',
+});
+
+const db = admin.firestore();
+
+
+
+// addDailyExpense
+const addDailyExpense = async (date, expenseData) => {
+  try {
+    const dailyExpenseRef = db.collection('dailyExpenses').doc(date);
+    await dailyExpenseRef.set(expenseData);
+    console.log('Daily expense added successfully');
+    return true;
+  } catch (error) {
+    console.error('Error adding daily expense:', error);
+    return false;
+  }
+};
+
+// 예시
+const exampleDailyExpenseData = {
+  amount: 3,
+  item: ['감자', '오이', '포도'],
+  cost: '10000',
+  pay: 'Card',
+  shop: '롯데마트',
+  tag: '장보기',
+  memo: '일주일 장보기',
+};
+
+// 예시 날짜
+const exampleDate = '2024-01-25'; 
+
+// 일일 지출 추가
+const isExpenseAdded = await addDailyExpense(exampleDate, exampleDailyExpenseData);
+console.log('Is Expense Added:', isExpenseAdded);
+
+// addWeeklyExpense
+const addWeeklyExpense = async (startDate, endDate, expenseData) => {
+  try {
+    // 여기에 Firebase 데이터베이스에 weeklyExpense 추가하는 코드 작성
+    // db.collection('weeklyExpenses').doc(startDate + '_' + endDate).set(expenseData);
+    console.log('Weekly expense added successfully');
+    return true;
+  } catch (error) {
+    console.error('Error adding weekly expense:', error);
+    return false;
+  }
+};
+
+//getDailyExpense
+const getDailyExpense = async (date) => {
+  try {
+    const expenseSnapshot = await db.collection('dailyExpenses').doc(date).get();
+    const expenseData = expenseSnapshot.data();
+    console.log('Daily expense retrieved successfully');
+    return expenseData;
+  } catch (error) {
+    console.error('Error getting daily expense:', error);
+    return null;
+  }
+};
+
+// 예시 날짜
+const exampleDate = '2024-01-25'; 
+
+// 일일 지출 가져오기
+const retrievedExpense = await getDailyExpense(exampleDate);
+console.log('Retrieved Daily Expense:', retrievedExpense);
+
+
+//getWeeklyExpense
+const getWeeklyCalendar = async (startDate, endDate) => {
+  try {
+    const calendarSnapshot = await db.collection('weeklyCalendars').doc(startDate + '_' + endDate).get();
+    const calendarData = calendarSnapshot.data();
+    console.log('Weekly calendar retrieved successfully');
+    return calendarData;
+  } catch (error) {
+    console.error('Error getting weekly calendar:', error);
+    return null;
+  }
+};
+
+// 예시 주 (시작 날짜 - 끝 날짜(시작 날짜 + 6))
+const exampleCalendarStartDate = '2024-01-01'; // 시작 날짜
+const exampleCalendarEndDate = '2024-01-07'; // 끝 날짜
+
+// 주간 달력 가져오기
+const retrievedWeeklyCalendar = await getWeeklyCalendar(exampleCalendarStartDate, exampleCalendarEndDate);
+console.log('Retrieved Weekly Calendar:', retrievedWeeklyCalendar);
+
+//getGraphData
+const setGraphData = async (selectedPeriod, donutGraphData, lineGraphData) => {
+  try {
+    const graphDataRef = db.collection('graphData');
+
+    if (selectedPeriod === 'monthly6Months') {
+      // 도넛 그래프 데이터 설정
+      await graphDataRef.doc('monthly6MonthsDonutGraph').set(donutGraphData);
+      // 꺾은선 그래프 데이터 설정
+      await graphDataRef.doc('monthly6MonthsLineGraph').set(lineGraphData);
+    } else if (selectedPeriod === 'monthly1Year') {
+      // 도넛 그래프 데이터 설정
+      await graphDataRef.doc('monthly1YearDonutGraph').set(donutGraphData);
+      // 꺾은선 그래프 데이터 설정
+      await graphDataRef.doc('monthly1YearLineGraph').set(lineGraphData);
+    } else {
+      console.error('Invalid selectedPeriod:', selectedPeriod);
+      return false;
+    }
+
+    console.log('Graph data set successfully');
+    return true;
+  } catch (error) {
+    console.error('Error setting graph data:', error);
+    return false;
+  }
+};
+
+// 예시 데이터
+const exampleDonutGraphData = { gray: 50, tag1Color: 'orange', tag2Color: 'red', tag3Color: 'brown' }; // 도넛 그래프 데이터 (색상 변경 필요)
+const exampleLineGraphData = { '2022-03': 120, '2022-04': 150, '2022-05': 180, '2022-06': 200, '2022-07': 150, '2022-08': 210, '2022-09': 90, '2022-10': 120, '2023-11': 130, '2023-`12': 210, '2024-01': 150, '2024-02': 100 }; // 꺾은선 그래프 데이터
+
+// 그래프 데이터 설정
+const isGraphDataSet = await setGraphData('monthly6Months', exampleDonutGraphData, exampleLineGraphData);
+console.log('Is Graph Data Set:', isGraphDataSet);
+
+//setGraphData
+const setGraphData = async (selectedPeriod, graphData) => {
+  try {
+    const graphDataRef = db.collection('graphData');
+
+    if (selectedPeriod === 'monthly6Months') {
+      // 도넛 그래프 데이터 설정 (1개월 단위)
+      await graphDataRef.doc('monthly6MonthsDonutGraph').set(graphData.donutGraphData);
+      // 꺾은선 그래프 데이터 설정
+      await graphDataRef.doc('monthly6MonthsLineGraph').set(graphData.lineGraphData);
+    } else if (selectedPeriod === 'monthly1Year') {
+      // 도넛 그래프 데이터 설정 (1개월 단위)
+      await graphDataRef.doc('monthly1YearDonutGraph').set(graphData.donutGraphData);
+      // 꺾은선 그래프 데이터 설정
+      await graphDataRef.doc('monthly1YearLineGraph').set(graphData.lineGraphData);
+    } else {
+      console.error('Invalid selectedPeriod:', selectedPeriod);
+      return false;
+    }
+
+    console.log('Graph data set successfully
+
