@@ -114,7 +114,7 @@ const handleSortOrder = async (orderType) => {
                 <Image source={require("./assets/lack.svg")}
                   style={{ width: 10, height: 11.1, left: 3 }}
                 />
-                <Text style={[styles.lackingText}, { color: 'red'}]>{displayLackingIngredients(recipe.id, recipe.ingredients)} 부족</Text>
+                <Text style={[styles.lackingText, { color: 'red'}]}>{displayLackingIngredients(recipe.id, recipe.ingredients)} 부족</Text>
               </View>
               <Text style={styles.timeText}>{recipe.time[0]} 시간 {recipe.time[1]} 분</Text>
             </TouchableOpacity>
