@@ -1,7 +1,8 @@
 import React, { useState, useEffect, } from 'react';
 import { View, Text, TouchableOpacity , StyleSheet, TextInput, FlatList} from 'react-native';
-import { addRecipeToCollection, orderByKorean, refrigeratorOrderByLack, getRefrigeratorIngredients, getBookmarkedRecipes } from './recipeFunctions';
+import { addRecipeToCollection, orderByKorean, refrigeratorOrderByLack, getRefrigeratorIngredients, addLackToCollection, compareIngredients } from './recipeFunctions';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RecipeTab = () => {
   const [showUserRecipes, setShowUserRecipes] = useState(false);
@@ -13,13 +14,31 @@ const RecipeTab = () => {
     fetchRecipeData();
     fetchRefrigeratorIngredients();
     fetchBookmarkedRecipes();
+    fetchRecipeFromStorage();
   }, []);
 
-const handleAddRecipe = () => {
-  navigation.navigate('AddUserRecipeView');
-  console.log('레시피 추가 화면으로 이동');
-  //여기에 레시피 데이터 받아오기
-  addNewRecipe(newUserRecipeData);
+  const saveRecipeToStorage = async (recipeData) => {
+  try {
+    await AsyncStorage.setItem('recipeData', JSON.stringify(recipeData));
+    console.log('레시피 데이터가 AsyncStorage에 저장되었습니다.');
+  } catch (error) {
+    console.error('레시피 데이터를 저장하는데 실패했습니다:', error);
+  }
+};
+
+const fetchRecipeFromStorage = async () => {
+  try {
+    const recipeData = await AsyncStorage.getItem('recipeData');
+    if (recipeData !== null) {
+      return JSON.parse(recipeData);
+    } else {
+      console.log('저장된 레시피 데이터가 없습니다.');
+      return null;
+    }
+  } catch (error) {
+    console.error('레시피 데이터를 가져오는데 실패했습니다:', error);
+    return null;
+  }
 };
 
 const handleToggleSwitch = () => {
@@ -38,10 +57,8 @@ const fetchRecipeData = async() => {
       recipes.push({
         id: data.recipe_id,
         name: data.recipe_name,
-        steps: data.recipe_steps,
         ingredients: data.recipe_ingredients,
         image: data.recipe_image,
-        difficulty: data.recipe_difficulty,
         time: data.recipe_time,
       });
     });
@@ -49,6 +66,19 @@ const fetchRecipeData = async() => {
   } catch (error) {
     console.error('레시피 데이터를 가져오는데 실패했습니다:', error);
   }
+};
+
+const displayLackingIngredients = async (recipeId, recipeIngredients) => {
+  const lackingIngredients = compareIngredients(refrigeratorIngredients, recipeIngredients);
+  if (lackingIngredients.length > 0){
+    try{
+      const lackId = await addLackToCollection({ recipeId, lackingIngredients });
+      console.log('Lack added with ID: ', lackId);
+    } catch (error) {
+      console.error('Error adding lack: ', error);
+    }
+  }
+  return lackingIngredients.join(', ');
 };
   
 const handleSortOrder = async (orderType) => {
@@ -66,8 +96,6 @@ const handleSortOrder = async (orderType) => {
   }
 };
 
-const filteredRecipeData = showUserRecipes ? userRecipes : recipeData;
-  
   return (
     <View style={styles.container}>
       <ScrollView style={styles.containerScroll}>
@@ -78,42 +106,17 @@ const filteredRecipeData = showUserRecipes ? userRecipes : recipeData;
               key={recipe.id}
               style={styles.post}
               onPress={() => console.log('Navigate to Recipe Detail:', recipe.id)}>
-              <Image source={{ uri: "https://via.placeholder.com/118x66" }}
+              <Image source={{ uri: recipe.image }}
                 style={{ width: 118, height: 66, left: 12, top: 11, borderRadius: 7 }}
               />
-              <Text style={styles.foodText}>{recipe.food}</Text>
+              <Text style={styles.foodText}>{recipe.name}</Text>
               <View style={{ left: 12, top: 15 }}>
                 <Image source={require("./assets/lack.svg")}
                   style={{ width: 10, height: 11.1, left: 3 }}
                 />
-                <Text style={styles.lackingText}>{recipe.lacking}{recipe.lackMore} 부족</Text>
+                <Text style={[styles.lackingText}, { color: 'red'}]>{displayLackingIngredients(recipe.id, recipe.ingredients)} 부족</Text>
               </View>
-              <Text style={styles.timeText}>{recipe.time} 분</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-
-    <View style={styles.container}>
-      <ScrollView style={styles.containerScroll}>
-        <View style={styles.row}>
-          {/* Recipe list */}
-          {filteredRecipeData.map((recipe) => (
-            <TouchableOpacity
-              key={recipe.id}
-              style={styles.post}
-              onPress={() => console.log('Navigate to Recipe Detail:', recipe.id)}>
-              <Image source={{ uri: "https://via.placeholder.com/118x66" }}
-                style={{ width: 118, height: 66, left: 12, top: 11, borderRadius: 7 }}
-              />
-              <Text style={styles.foodText}>{recipe.food}</Text>
-              <View style={{ left: 12, top: 15 }}>
-                <Image source={require("./assets/lack.svg")}
-                  style={{ width: 10, height: 11.1, left: 3 }}
-                />
-                <Text style={styles.lackingText}>{recipe.lacking}{recipe.lackMore} 부족</Text>
-              </View>
-              <Text style={styles.timeText}>{recipe.time} 분</Text>
+              <Text style={styles.timeText}>{recipe.time[0]} 시간 {recipe.time[1]} 분</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -131,7 +134,7 @@ const filteredRecipeData = showUserRecipes ? userRecipes : recipeData;
             value={showUserRecipes}
           />
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddRecipe}>
+        <TouchableOpacity style={styles.addButton} onPress={fetchRecipeFromStorage}>
           <Text style={styles.addButtonText}>Add Recipe</Text>
         </TouchableOpacity>
         <View style={styles.sortButtons}>
