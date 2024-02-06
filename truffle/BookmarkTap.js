@@ -1,22 +1,24 @@
 import React, { useState, useEffect, } from 'react';
-import { View, Text, TouchableOpacity , StyleSheet, TextInput, FlatList} from 'react-native';
+import { View, Text, TouchableOpacity , StyleSheet, ScrollView, Image } from 'react-native';
 import { addBookmark, getBookmarkedRecipes } from './recipeFunctions';
 
 const BookmarkTab = ({ userId, navigation }) => {
   const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
 
   useEffect(() => {
+    const fetchBookmarkedRecipes = async (userId) => {
+      try {
+        const recipes = await getBookmarkedRecipes(userId);
+        setBookmarkedRecipes(recipes);
+      } catch (error) {
+        console.error('북마크 레시피를 가져오는데 실패했습니다.', error);
+      }
+    };
+
     fetchBookmarkedRecipes(userId);
   }, [userId]);
 
-  const fetchBookmarkedRecipes = async (userId) => {
-    try {
-      const recipes = await getBookmarkedRecipes(userId);
-      setBookmarkedRecipes(recipes);
-    } catch (error) {
-      console.error('북마크 레시피를 가져오는데 실패했습니다.', error);
-    }
-  };
+
 
   const handleAddBookmark = async (recipeId) => {
     try {
@@ -39,9 +41,9 @@ const BookmarkTab = ({ userId, navigation }) => {
             <Image source={{ uri: recipe.image }} style={{ width: 118, height: 66, left: 12, top: 11, borderRadius: 7 }} />
             <Text style={styles.foodText}>{recipe.name}</Text>
             <View style={{ left: 12, top: 15 }}>
-              <Text style={styles.lackingText}>{recipe.lacking}{recipe.lackMore} 부족</Text>
+              <Text style={[styles.lackingText, { color: 'red' }]}>{recipe.lacking}{recipe.lackMore} 부족</Text>
             </View>
-            <Text style={styles.timeText}>{recipe.time} 분</Text>
+            <Text style={styles.timeText}>{recipe.time[0]} 시간 {recipe.time[1]} 분</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -61,9 +63,9 @@ const styles = StyleSheet.create({
   marginBottom: 170,
   },
   cont: {
-    flexDirections: 'row',
+    flexDirection: 'row',
     justifyContent: 'center',
-    felxWrap: 'wrap',
+    flexWrap: 'wrap',
   },
   post: {
     position: 'relative',
@@ -110,7 +112,7 @@ const styles = StyleSheet.create({
     position: 'relative', 
     paddingHorizontal: 40, 
     paddingBottom: 80, 
-    gap: 20,
+    margin: 20,
     
   },
 });
