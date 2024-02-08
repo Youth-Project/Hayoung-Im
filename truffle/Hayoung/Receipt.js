@@ -12,6 +12,11 @@ const Receipt = ({selectedDate}) => {
   const [amount, setAmount] = useState(0);
   const [items, setItems] = useState([]);
   const [payment, setPayment] = useState({ method: '', shop: '', tag: '' });
+  const [memo, setMemo] = useState('');
+
+  useEffect(() => {
+    handleGetDailyExpense();
+  }, [selectedDate]);
   
   const toggleEditModal = () => {
     setEditVisible(!EditVisible);
@@ -79,9 +84,9 @@ const Receipt = ({selectedDate}) => {
     <View style={{alignItems:'center', marginTop:20}}>
       <View style={{ flexDirection:'row', gap:45}}>
         <Text> #{index + 1}</Text>
-        <Text> {item.name}</Text>
-        <Text> {item.quantity}</Text>
-        <Text> {item.price}원</Text>
+        {item.map((subItem, subIndex) => (
+                <Text key={subIndex}>{subItem}</Text>
+              ))} //여기 잘 모르겠엄
         {/*구매목록 */}  
       </View>
       <Line marginTop={20}/>
@@ -109,7 +114,6 @@ const Receipt = ({selectedDate}) => {
     <View style={{ marginTop:20, marginLeft:20}}>
       <View style={{ flexDirection:'row', gap:45}}>
         <Text> MEMO</Text>
-        {/*MEMO */}  
       </View>
       <Text> {memo}</Text>
     </View>
