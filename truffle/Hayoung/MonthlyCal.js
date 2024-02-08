@@ -1,3 +1,24 @@
+const getAllAmountsForDates = async () => {
+  const userId = firebase.auth().currentUser.uid;
+  const allAmounts = {};
+  const datePromises = [];
+  
+  for (let row of calendarData) {
+    for (let day of row) {
+      datePromises.push(getAmountForDate(day.date));
+    }
+  }
+  
+  const amounts = await Promise.all(datePromises);
+  
+  for (let i = 0; i < calendarData.length; i++) {
+    for (let j = 0; j < calendarData[i].length; j++) {
+      allAmounts[calendarData[i][j].date] = amounts[i * calendarData[i].length + j];
+    }
+  }
+  
+  return allAmounts;
+};
 import React, {useState, useEffect} from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
