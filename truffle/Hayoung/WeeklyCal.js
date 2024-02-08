@@ -4,6 +4,7 @@ import moment from 'moment';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
+import { db } from './firebaseConfig'
 
 const WeeklyCal = ({ selectedDate, handleDayClick }) => {
   const [amounts, setAmounts] = useState({});
@@ -20,7 +21,8 @@ const WeeklyCal = ({ selectedDate, handleDayClick }) => {
   const getAmountForDate = async (date) => {
     try {
       const userId = firebase.auth().currentUser.uid;
-      const docRef = firebase.firestore().collection(userId).doc(date);
+      //const docRef = firebase.firestore().collection(userId).doc(date);
+      const docRef = db.collection(userId).doc(date);
       const docSnapshot = await docRef.get();
 
       if (docSnapshot.exists) {
