@@ -1,24 +1,36 @@
 const getAllAmountsForDates = async () => {
   const userId = firebase.auth().currentUser.uid;
   const allAmounts = {};
-  const datePromises = [];
-  
+  const dateSet = new Set();
+
+  // Unique dates extraction
   for (let row of calendarData) {
     for (let day of row) {
-      datePromises.push(getAmountForDate(day.date));
+      dateSet.add(day.date);
     }
   }
-  
-  const amounts = await Promise.all(datePromises);
-  
-  for (let i = 0; i < calendarData.length; i++) {
-    for (let j = 0; j < calendarData[i].length; j++) {
-      allAmounts[calendarData[i][j].date] = amounts[i * calendarData[i].length + j];
-    }
+
+  const uniqueDates = Array.from(dateSet);
+
+  // Fetching amounts in batches
+  const batchSize = 10; // Adjust the batch size as needed
+  const batches = [];
+  for (let i = 0; i < uniqueDates.length; i += batchSize) {
+    batches.push(uniqueDates.slice(i, i + batchSize));
   }
-  
+
+  // Parallel processing of batches
+  await Promise.all(batches.map(async (batch) => {
+    const batchPromises = batch.map(date => getAmountForDate(date));
+    const batchResults = await Promise.all(batchPromises);
+    batch.forEach((date, index) => {
+      allAmounts[date] = batchResults[index];
+    });
+  }));
+
   return allAmounts;
 };
+
 import React, {useState, useEffect} from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
