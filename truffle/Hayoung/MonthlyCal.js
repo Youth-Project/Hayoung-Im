@@ -44,7 +44,6 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
       const amount = await getAmountForDate(day.date);
       allAmounts[day.date] = amount;
     }
-  }
   return allAmounts;
 };
 
