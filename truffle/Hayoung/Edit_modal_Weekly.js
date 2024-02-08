@@ -2,26 +2,45 @@ import React, {useState} from 'react';
 import { View, Button, Modal, Text, TouchableOpacity, StyleSheet,Dimensions, TextInput } from 'react-native';
 import { ListItem } from 'react-native-elements';
 import AddBTNIcon from "../assets/icons/AddBTNIcon.svg";
+import { addDailyExpense, getDailyExpense } from './calendarFunctions';
 
 const EditModal = ({ EditVisible, toggleEditModal, selectedDate }) => {
+  const [amount, setAmount] = useState(0);
   const [items, setItems] = useState([]);
-  const [quantity, setQuantity] = useState('');
-  const [itemName, setItemName] = useState('');
-  const [price, setPrice] = useState('');
+  const [payment, setPayment] = useState({ method: '', shop: '', tag: '' });
+  const [memo, setMemo] = useState('');
 
-  const handleAddItem = () => {
-    if (quantity && itemName && price) {
-      const newItem = {
-        quantity,
-        itemName,
-        price,
-      };
-
-      setItems([...items, newItem]);
-      setQuantity('');
-      setItemName('');
-      setPrice('');
+  const handleAddDailyExpense = async () => {
+    const expenseData = {
+      amount,
+      items,
+      payment,
+      memo, 
+    };
+    const success = await addDailyExpense(selectedDate, expenseData);
+    if (success) {
+      console.log('Daily expense added successfully');
+    } else {
+      console.log('Failed to add daily expense');
     }
+  };
+
+  const handleGetDailyExpense = async () => {
+    const data = await getDailyExpense(selectedDate);
+    if (data) {
+      setAmount(data.amount);
+      setItems(data.items);
+      setPayment(data.payment);
+      setMemo(data.memo);
+      console.log('Daily expense retrieved successfully:', data);
+    } else {
+      console.log('Failed to retrieve daily expense');
+    }
+  };
+
+  const handleAddPayment = () => {
+    setItems([...items, { name: '', quantity: 0, price: 0 }]);
+    setPayment({ method: '', shop: '', tag: '' });
   };
 
   return (
