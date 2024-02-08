@@ -14,22 +14,22 @@ const getAllAmountsForDates = async () => {
 
   // Fetching amounts in batches
   const batchSize = 10; // Adjust the batch size as needed
-  const batches = [];
-  for (let i = 0; i < uniqueDates.length; i += batchSize) {
-    batches.push(uniqueDates.slice(i, i + batchSize));
-  }
+  const totalBatches = Math.ceil(uniqueDates.length / batchSize);
+  let processedCount = 0;
 
-  // Parallel processing of batches
-  await Promise.all(batches.map(async (batch) => {
+  while (processedCount < totalBatches) {
+    const batch = uniqueDates.slice(processedCount * batchSize, (processedCount + 1) * batchSize);
     const batchPromises = batch.map(date => getAmountForDate(date));
     const batchResults = await Promise.all(batchPromises);
     batch.forEach((date, index) => {
       allAmounts[date] = batchResults[index];
     });
-  }));
+    processedCount++;
+  }
 
   return allAmounts;
 };
+
 
 import React, {useState, useEffect} from 'react';
 import { View, TouchableOpacity } from 'react-native';
