@@ -1,16 +1,52 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Table, Row } from 'react-native-table-component';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import moment from 'moment';
+import firebase from 'firebase/app';
+import 'firebase/firestore';
 
 const MonthlyCal = ({ calendarData, handleDayClick }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(moment());
-  const [expenses, setExpenses] = useState([]);
-  const [newExpense, setNewExpense] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentDate.month() + 1);
+  const [allAmounts, setAllAmounts] = useState({});
   const circleRadius = 16;
+  
+  useEffect(() => {
+    getAllAmountsForDates().then((amounts) => {
+      setAllAmounts(amounts);
+    });
+  }, []);
+
+  const getAmoutForDate = async (date) => {
+    try{
+      const userId = firebase.auth().currentUser.uid;
+      const docRef = firebase.firestore().collection(userId).doc(date);
+      const docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists){
+        const data = docSnapshot.data();
+        return data.amount || 0;
+      } else {
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error fetching amount from date:', error);
+      return 0;
+    }
+  };
+
+  const getAllAmountsForDates = asyncy () => {
+    const userId = firebase.auth().currentUser.uid;
+    const allAmounts = {};
+    for (let day of calendarData) {
+      const amount = await getAmountForDate(day.date);
+      allAmounts[day.date] = amount;
+    }
+  }
+  return allAmounts;
+};
 
   return calendarData.map((row, rowIndex) => (
     <Row
@@ -53,7 +89,7 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
                 fill='red'
                 style={{ overflow: 'visible' }}
               >
-                {day.expense}
+                {allAmounts[day.date]}
               </SvgText>
             </Svg>
           </View>
