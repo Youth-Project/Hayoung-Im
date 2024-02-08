@@ -19,7 +19,7 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
     });
   }, []);
 
-  const getAmoutForDate = async (date) => {
+  const getAmountForDate = async (date) => {
     try{
       const userId = firebase.auth().currentUser.uid;
       const docRef = firebase.firestore().collection(userId).doc(date);
