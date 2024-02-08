@@ -37,7 +37,7 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
     }
   };
 
-  const getAllAmountsForDates = asyncy () => {
+  const getAllAmountsForDates = async () => {
     const userId = firebase.auth().currentUser.uid;
     const allAmounts = {};
     for (let day of calendarData) {
