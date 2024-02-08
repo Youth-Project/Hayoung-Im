@@ -38,13 +38,39 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
   };
 
   const getAllAmountsForDates = async () => {
-    const userId = firebase.auth().currentUser.uid;
-    const allAmounts = {};
-    for (let day of calendarData) {
-      const amount = await getAmountForDate(day.date);
-      allAmounts[day.date] = amount;
+  const userId = firebase.auth().currentUser.uid;
+  const allAmounts = {};
+  for (let row of calendarData) {
+    for (let day of row) {
+      allAmounts[day.date] = null;
     }
-  return allAmounts;
+  }
+
+  try {
+    const userId = firebase.auth().currentUser.uid;
+    const batch = firebase.firestore().batch();
+    for (let row of calendarData) {
+      for (let day of row) {
+        const docRef = firebase.firestore().collection(userId).doc(day.date);
+        batch.get(docRef);
+      }
+    }
+
+    const snapshots = await batch.commit();
+    snapshots.forEach((snapshot, index) => {
+      const day = calendarData.flat()[index];
+      if (snapshot.exists) {
+        allAmounts[day.date] = snapshot.data().amount || 0;
+      } else {
+        allAmounts[day.date] = 0;
+      }
+    });
+
+    return allAmounts;
+  } catch (error) {
+    console.error('Error fetching amounts for dates:', error);
+    return allAmounts;
+  }
 };
 
   return calendarData.map((row, rowIndex) => (
