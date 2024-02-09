@@ -1,51 +1,19 @@
-const getAllAmountsForDates = async () => {
-  const userId = firebase.auth().currentUser.uid;
-  const allAmounts = {};
-  const dateSet = new Set();
-
-  // Unique dates extraction
-  for (let row of calendarData) {
-    for (let day of row) {
-      dateSet.add(day.date);
-    }
-  }
-
-  const uniqueDates = Array.from(dateSet);
-
-  // Fetching amounts in batches
-  const batchSize = 10; // Adjust the batch size as needed
-  const totalBatches = Math.ceil(uniqueDates.length / batchSize);
-  let processedCount = 0;
-
-  while (processedCount < totalBatches) {
-    const batch = uniqueDates.slice(processedCount * batchSize, (processedCount + 1) * batchSize);
-    const batchPromises = batch.map(date => getAmountForDate(date));
-    const batchResults = await Promise.all(batchPromises);
-    batch.forEach((date, index) => {
-      allAmounts[date] = batchResults[index];
-    });
-    processedCount++;
-  }
-
-  return allAmounts;
-};
-
-
-import React, {useState, useEffect} from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { Table, Row } from 'react-native-table-component';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { Table, Row, Cell } from 'react-native-table-component';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import moment from 'moment';
-import firebase from 'firebase/app';
-import 'firebase/firestore';
+import firestore from "@react-native-firebase/firestore";
 
 const MonthlyCal = ({ calendarData, handleDayClick }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(moment());
+  const [expenses, setExpenses] = useState([]);
+  const [newExpense, setNewExpense] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(currentDate.month() + 1);
   const [allAmounts, setAllAmounts] = useState({});
   const circleRadius = 16;
-  
+
   useEffect(() => {
     getAllAmountsForDates().then((amounts) => {
       setAllAmounts(amounts);
@@ -54,8 +22,8 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
 
   const getAmountForDate = async (date) => {
     try{
-      const userId = firebase.auth().currentUser.uid;
-      const docRef = firebase.firestore().collection(userId).doc(date);
+      const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+      const docRef = firestore().collection(userId).doc(date);
       const docSnapshot = await docRef.get();
 
       if (docSnapshot.exists){
@@ -71,66 +39,82 @@ const MonthlyCal = ({ calendarData, handleDayClick }) => {
   };
 
   const getAllAmountsForDates = async () => {
-    const userId = firebase.auth().currentUser.uid;
-      const allAmounts = {};
-      for (let row of calendarData) {
-        for (let day of row){
-        const amount = await getAmountForDate(day.date);
-        allAmounts[day.date] = amount;
-      }}
+    const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+    const allAmounts = {};
+    const dateSet = new Set();
+  
+    for (let row of calendarData) {
+      for (let day of row) {
+        dateSet.add(day.date);
+      }
+    }
+  
+    const uniqueDates = Array.from(dateSet);
+  
+    for (let date of uniqueDates) {
+      const amount = await getAmountForDate(date);
+      if (amount !== 0) {
+        allAmounts[date] = amount;
+      }
+    }
+  
     return allAmounts;
   };
 
-  return calendarData.map((row, rowIndex) => (
-    <Row
-      key={rowIndex}
-      data={row.map((day, colIndex) => (
-        <TouchableOpacity
-          key={colIndex}
-          onPress={() => handleDayClick(day.date)}
-          style={{
-            flex: 1,
-            marginTop: 5,
-            alignItems: 'center',
-          }}
-        >
-          <View>
-            <Svg height={circleRadius * 4} width={circleRadius * 2}>
-              <Circle
-                cx={circleRadius}
-                cy={circleRadius}
-                r={circleRadius}
-                fill={day.date === selectedDate ? 'orange' : 'transparent'}
-              />
+  return (
+    <Table>
+      {calendarData.map((row, rowIndex) => (
+        <Row
+          key={rowIndex}
+          data={row.map((day, colIndex) => (
+            <TouchableOpacity
+              key={colIndex}
+              onPress={() => handleDayClick(day.date)}
+              style={{
+                flex: 1,
+                marginTop: 5,
+                alignItems: 'center',
+              }}
+            >
+              <View>
+                <Svg height={circleRadius * 4} width={circleRadius * 2}>
+                  <Circle
+                    cx={circleRadius}
+                    cy={circleRadius}
+                    r={circleRadius}
+                    fill={day.date === selectedDate ? 'orange' : 'transparent'}
+                  />
 
-              <SvgText
-                x={circleRadius}
-                y={circleRadius + 4}
-                fontSize={12}
-                fontWeight="bold"
-                textAnchor="middle"
-                fill={day.isCurrentMonth ? (day.date === selectedDate ? 'white' : day.date === moment().format('YYYY-MM-DD') ? 'orange' : 'black') : 'lightgray'}
-              >
-                {day.date.substring(8)}
-              </SvgText>
+                  <SvgText
+                    x={circleRadius}
+                    y={circleRadius + 4}
+                    fontSize={12}
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    fill={day.isCurrentMonth ? (day.date === selectedDate ? 'white' : day.date === moment().format('YYYY-MM-DD') ? 'orange' : 'black') : 'lightgray'}
+                  >
+                    {day.date.substring(8)}
+                  </SvgText>
 
-              <SvgText
-                x={circleRadius}
-                y={circleRadius + 25}
-                fontSize={10}
-                textAnchor="middle"
-                fill='red'
-                style={{ overflow: 'visible' }}
-              >
-                {allAmounts[day.date]}
-              </SvgText>
-            </Svg>
-          </View>
-        </TouchableOpacity>
+                  <SvgText
+                    x={circleRadius}
+                    y={circleRadius + 20}
+                    fontSize={10}
+                    textAnchor="middle"
+                    fill='grey'
+                    style={{ overflow: 'visible' }}
+                  >
+                    {allAmounts[day.date]}
+                  </SvgText>
+                </Svg>
+              </View>
+            </TouchableOpacity>
+          ))}
+          style={{ height: circleRadius * 4 }}
+        />
       ))}
-      style={{ height: circleRadius * 4 }}
-    />
-  ));
+    </Table>
+  );
 };
 
 export default MonthlyCal;
