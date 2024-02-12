@@ -2,8 +2,25 @@ import React, { useContext, useState } from "react";
 import { View, Text, TouchableOpacity , StyleSheet,AppRegistry,processColor,Dimensions} from 'react-native';
 import PieChart from 'react-native-pie-chart'
 import TruffleLogo from "../assets/logo/TruffleLogo.svg";
+import firestore from "@react-native-firebase/firestore";
 
 function DonutChart () {
+  const [budget, setBudget] = useState([]);
+  useEffect(() => {
+    const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+    if (currentUser) {
+      db.collection("users").doc(userId).get().then((doc) => {
+        if (doc.exists) {
+          setBudget(doc.data().user_budget);
+        } else {
+          console.log("No such document!");
+        }
+      }).catch((error) => {
+        console.log("Error getting document:", error);
+      });
+    }
+  }, []);
+
   const series = [25, 21, 13, 42]
   const sliceColor = ['#D55A44', '#FEA655', '#FFD98E', '#ABABAB']
 
