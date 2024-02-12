@@ -48,7 +48,7 @@ const EditReceiptModal = ({ EditVisible, toggleEditModal, selectedDate }) => {
       const date = selectedDate;
       const data = {
         amount: totalPrice,
-        items: items
+        items: items,
         pay: payObjects, 
         memo: memo
       };
