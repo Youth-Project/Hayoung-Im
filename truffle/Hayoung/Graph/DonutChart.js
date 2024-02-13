@@ -5,23 +5,54 @@ import TruffleLogo from "../assets/logo/TruffleLogo.svg";
 import firestore from "@react-native-firebase/firestore";
 
 function DonutChart () {
-  const [budget, setBudget] = useState([]);
+  const [userbudget, setUserBudget] = useState(0);
+  const [expenses, setExpenses] = useState({
+    외식: 0,
+    장보기: 0,
+    배달: 0,
+  });
   useEffect(() => {
-    const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
-    if (currentUser) {
-      db.collection("users").doc(userId).get().then((doc) => {
-        if (doc.exists) {
-          setBudget(doc.data().user_budget);
-        } else {
-          console.log("No such document!");
-        }
-      }).catch((error) => {
-        console.log("Error getting document:", error);
-      });
-    }
+    const fetchBudgetAndExpenses = async () => {
+      const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+      try {
+        const userBudgetDoc = await firestore().collection("users").doc(userId).get();
+        const userBudgetData = userBudgetDoc.data();
+        setUserBudget(userBudgetData.user_budget || 0);
+
+        const exampleExpense = {
+          외식: 80000,
+          장보기: 100000,
+          배달: 40000,
+        };
+        setExpense(exampleExpenses);
+      } catch (error) {
+      console.error("Error fetching budget and expenses: ", error);
+      }
+    };
+    fetchBudgetAndExpense();
   }, []);
 
-  const series = [25, 21, 13, 42]
+  const calculateRemainingBudget = () => {
+    const totalExpense = Object.values(expenses).reduce((acc, expense) => acc + expense, 0);
+    return userBudget - totalExpense;
+  };
+
+  const remainingBudget = calculateRemainingBudget();
+
+  const totalBudget = userBudget;
+  const expensePercentages = {
+    외식: (expenses.외식 / totalBudget) * 100,
+    장보기: (expenses.장보기 / totalBudget) * 100,
+    배달: (expenses.배달 / totalBudget) * 100,
+    남은금액: (remainingBudget / totalBudget) * 100,
+  };
+
+  const series = [
+    expensePercentages.장보기,
+    expensePercentages.배달,
+    expensePercentages.외식,
+    expensePercentages.남은금액,
+  ]
   const sliceColor = ['#D55A44', '#FEA655', '#FFD98E', '#ABABAB']
 
     return (
