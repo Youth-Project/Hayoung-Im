@@ -20,10 +20,28 @@ const EditReceiptModal = ({ EditVisible, toggleEditModal, selectedDate }) => {
 
   useEffect(() => {
     const totalPrice = itemsArr.reduce((acc, item) => {
-    return acc + item.priceArr.reduce((acc2, price) => acc2 + price, 0);
-    }, 0);
+    const itemTotalPrice = item.priceArr.reduce((itemAcc, price) => itemAcc + price, 0);
+    return acc + itemTotalPrice;
+  }, 0);
     setTotalPrice(totalPrice);
-  }, [items]);
+  }, [itemsArr]);
+
+  const itemsArr = [
+    {
+      nameArr: ['항목1', '항목2'],
+      quantityArr: [2, 1],
+      priceArr: [200, 150],
+    },
+    {
+      nameArr: ['항목3', '항목4'],
+      quantityArr: [1, 4],
+      priceArr: [50, 100],
+    },
+  ];
+
+  const payArr = ['현금', '현금'];
+  const shopArr = ['편의점', '편의점'];
+  const tagArr = ['장보기', '장보기'];
 
   const handleAddExpense = () => {
     setExpenseCount(prevCount => prevCount + 1);
@@ -35,7 +53,7 @@ const EditReceiptModal = ({ EditVisible, toggleEditModal, selectedDate }) => {
     tag: tagArr[index]
   }));
 
-  const items = itemsArr.map(item => ({
+  const itemsData = itemsArr.map(item => ({
     name: item.nameArr,
     quantity: item.quantityArr,
     price: item.priceArr
@@ -48,7 +66,7 @@ const EditReceiptModal = ({ EditVisible, toggleEditModal, selectedDate }) => {
       const date = selectedDate;
       const data = {
         amount: totalPrice,
-        items: items,
+        items: itemsData,
         pay: payObjects, 
         memo: memo
       };
