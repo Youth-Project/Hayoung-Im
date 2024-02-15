@@ -16,14 +16,9 @@ function DonutChart () {
   useEffect(() => {
     const fetchBudgetAndExpenses = async () => {
       try {
-        const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
-        const userRef = firestore().collection('users').doc(userId);
-        const snapshot = await userRef.get();
-        if (snapshot.exists) {
-          const userData = snapshot.data();
-          const userBudget = userData.user_budget;
-          setUserBudget(userBudget || 0);
-        }
+        const userBudgetDoc = await firestore().collection("users").doc(userId).get();
+        const userBudgetData = userBudgetDoc.data();
+        setUserBudget(userBudgetData.user_budget || 0);
 
         const monthlyExpenseData = await fetchMonthlyExpenses();
         setExpenses(monthlyExpenseData);
@@ -35,35 +30,35 @@ function DonutChart () {
   }, []);
 
   const fetchMonthlyExpenses = async () => {
-    try {
-      const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
-      const userRef = firestore().collection('users').doc(userId);
-      const snapshot = await userRef.get();
-      if (!snapshot.exists) {
-        throw new Error("No monthly expenses data found");
-      }
-
-      const userData = snapshot.data();
-      const deliveryExpense = userData.delivery[0] || 0;
-      const shoppingExpense = userData.shopping[0] || 0;
-      const eatOutExpense = userData.eatOut[0] || 0;
-
-      return {
-        total: deliveryExpense + shoppingExpense + eatOutExpense,
-        delivery: deliveryExpense,
-        shopping: shoppingExpense,
-        eatOut: eatOutExpense,
-      };
-    } catch (error) {
-      console.error("Error fetching monthly expenses: ", error);
-      return {
-        total: 0,
-        delivery: 0,
-        shopping: 0,
-        eatOut: 0,
-      };
+  try {
+    const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+    const userRef = firestore().collection('users').doc(userId);
+    const snapshot = await userRef.get();
+    if (!snapshot.exists) {
+      throw new Error("No monthly expenses data found");
     }
-  };
+
+    const userData = snapshot.data();
+    const deliveryExpense = userData.delivery[userData.delivery.length - 1] || 0;
+    const shoppingExpense = userData.shopping[userData.shopping.length - 1] || 0;
+    const eatOutExpense = userData.eatOut[userData.eatOut.length - 1] || 0;
+
+    return {
+      total: deliveryExpense + shoppingExpense + eatOutExpense,
+      delivery: deliveryExpense,
+      shopping: shoppingExpense,
+      eatOut: eatOutExpense,
+    };
+  } catch (error) {
+    console.error("Error fetching monthly expenses: ", error);
+    return {
+      total: 0,
+      delivery: 0,
+      shopping: 0,
+      eatOut: 0,
+    };
+  }
+};
 
   const calculateRemainingBudget = () => {
     const total = expenses.eatOut + expenses.shopping + expenses.delivery;
