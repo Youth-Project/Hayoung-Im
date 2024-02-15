@@ -11,26 +11,57 @@ function DonutChart () {
     장보기: 0,
     배달: 0,
   });
+
+  const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+  
   useEffect(() => {
     const fetchBudgetAndExpenses = async () => {
-      const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
       try {
         const userBudgetDoc = await firestore().collection("users").doc(userId).get();
         const userBudgetData = userBudgetDoc.data();
         setUserBudget(userBudgetData.user_budget || 0);
 
-        const exampleExpense = {
-          외식: 80000,
-          장보기: 100000,
-          배달: 40000,
-        };
-        setExpense(exampleExpenses);
+        const monthlyExpenseData = await fetchMonthlyExpenses();
+        setExpenses(monthlyExpenseData);
       } catch (error) {
       console.error("Error fetching budget and expenses: ", error);
       }
     };
     fetchBudgetAndExpense();
   }, []);
+
+  const fetchMonthlyExpenses = async () => {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    const startOfMonth = new Date(year, month-1, 1);
+    const endOfMonth = new Date(year, month, 0);
+    try{
+      const monthlyExpenseDoc = await firestore().collection(userId)
+      .where(firebase.firestore.FieldPath.documentId(), ">=", startOfMonth.toISOString().split('T')[0])
+      .where(firebase.firestore.FieldPath.documentId(), "<=", endOfMonth.toISOString().split('T')[0])
+      .get();
+
+      const monthlyExpense = {
+        total: 0,
+        배달: 0,
+        장보기: 0,
+        외식: 0,
+      };
+
+      monthlyExpenseDoc.forEach((items, index) => {
+        //이부분을 어케 수정하지...
+        const tag = tagArr[index];
+        items.nameArr.forEach((name, i) => {
+          const expense = items.quantityArr[i] * items.priceArr[i];
+          montlyExpense.total += expense;
+          if (tag === '배달') montlyExpense.delivery += expense;
+          else if (tag === '장보기') montlyExpense.shopping += expense;
+          else if (tag === '외식') montlyExpense.eatout += expense;
+      });
+    } catch (error) {
+      console.error("Error fetching monthly expenses: ", error);
+    }
+  };
 
   const calculateRemainingBudget = () => {
     const totalExpense = Object.values(expenses).reduce((acc, expense) => acc + expense, 0);
