@@ -7,11 +7,10 @@ import firestore from "@react-native-firebase/firestore";
 function DonutChart () {
   const [userbudget, setUserBudget] = useState(0);
   const [expenses, setExpenses] = useState({
-    외식: 0,
-    장보기: 0,
-    배달: 0,
+    eatOut: 0, //외식
+    shopping: 0, //장보기
+    delivery: 0, //배달
   });
-
   const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
   
   useEffect(() => {
@@ -43,9 +42,9 @@ function DonutChart () {
 
       const monthlyExpense = {
         total: 0,
-        배달: 0,
-        장보기: 0,
-        외식: 0,
+        delivery: 0,
+        shopping: 0,
+        eatOut: 0,
       };
 
       monthlyExpenseDoc.forEach((items, index) => {
@@ -54,37 +53,38 @@ function DonutChart () {
         items.nameArr.forEach((name, i) => {
           const expense = items.quantityArr[i] * items.priceArr[i];
           montlyExpense.total += expense;
-          if (tag === '배달') montlyExpense.delivery += expense;
-          else if (tag === '장보기') montlyExpense.shopping += expense;
-          else if (tag === '외식') montlyExpense.eatout += expense;
+          if (tag === 'delivery') montlyExpense.delivery += expense;
+          else if (tag === 'shopping') montlyExpense.shopping += expense;
+          else if (tag === 'eatOut') montlyExpense.eatout += expense;
       });
     } catch (error) {
       console.error("Error fetching monthly expenses: ", error);
     }
-  };
+    )}};
 
-  const calculateRemainingBudget = () => {
-    const totalExpense = Object.values(expenses).reduce((acc, expense) => acc + expense, 0);
-    return userBudget - totalExpense;
-  };
-
-  const remainingBudget = calculateRemainingBudget();
-
-  const totalBudget = userBudget;
-  const expensePercentages = {
-    외식: (expenses.외식 / totalBudget) * 100,
-    장보기: (expenses.장보기 / totalBudget) * 100,
-    배달: (expenses.배달 / totalBudget) * 100,
-    남은금액: (remainingBudget / totalBudget) * 100,
-  };
-
-  const series = [
-    expensePercentages.장보기,
-    expensePercentages.배달,
-    expensePercentages.외식,
-    expensePercentages.남은금액,
-  ]
-  const sliceColor = ['#D55A44', '#FEA655', '#FFD98E', '#ABABAB']
+    const calculateRemainingBudget = () => {
+      const totalExpense = Object.values(expenses).reduce((acc, expense) => acc + expense, 0);
+      return userBudget - totalExpense;
+    };
+  
+    const remainingBudget = calculateRemainingBudget();
+  
+    const totalBudget = userBudget;
+    const expensePercentages = {
+      eatOut: (expenses.eatOut / totalBudget) * 100,
+      shopping: (expenses.shopping / totalBudget) * 100,
+      delivery: (expenses.delivery / totalBudget) * 100,
+      extraBudget: (remainingBudget / totalBudget) * 100, //남은 금액
+    };
+  
+    const series = [
+      expensePercentages.shopping,
+      expensePercentages.delivery,
+      expensePercentages.eatOut,
+      expensePercentages.extraBudget,
+    ]
+    const sliceColor = ['#D55A44', '#FEA655', '#FFD98E', '#ABABAB']
+  
 
     return (
       <View style={Styles.container}>
@@ -103,11 +103,11 @@ function DonutChart () {
           </View>
           <View style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}} marginTop={20}>
             <View style={[Styles.colorSlice,{backgroundColor:'#D55A44'}]}></View>
-            <Text >장보기</Text>
+            <Text >shopping</Text>
             <View style={[Styles.colorSlice,{backgroundColor:'#FEA655'}]}></View>
-            <Text>배달</Text>
+            <Text>delivery</Text>
             <View style={[Styles.colorSlice,{backgroundColor:'#FFD98E'}]}></View>
-            <Text>외식</Text>
+            <Text>eatOut</Text>
           </View>
 
       </View>
