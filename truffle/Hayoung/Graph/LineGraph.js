@@ -4,13 +4,13 @@ import {Dimensions} from 'react-native';
 import {LineChart} from "react-native-chart-kit";
 import { Dropdown } from 'react-native-element-dropdown';
 import moment from 'moment';
+import firestore from "@react-native-firebase/firestore"
 
 const DropdownData =[
   { label: '최근 1주', value: '1' },
-  { label: '최근 1개월', value: '2' },
   { label: '최근 3개월', value: '3' },
-  { label: '최근 6개월', value: '4' },
-  { label: '최근 1년', value: '5' },
+  { label: '최근 6개월', value: '6' },
+  { label: '최근 1년', value: '12' },
 ];
 
 //--labels에 해당 달 출력--\\
@@ -41,18 +41,6 @@ const LineGraph = () => {
         </ScrollView>
         </View>;
         break;
-       case '2': 
-       return <View>
-        <LineChart
-        data={data2}
-        width={400}
-        height={220}
-        withVerticalLines={false}
-        chartConfig={chartConfig}
-        bezier
-        />
-        </View>;
-        break;
        case '3': 
        return <View>
        <ScrollView horizontal>
@@ -67,7 +55,7 @@ const LineGraph = () => {
        </ScrollView>
        </View>;
         break;
-       case '4': 
+       case '6': 
        return <View>
         <ScrollView horizontal>
        <LineChart
@@ -81,7 +69,7 @@ const LineGraph = () => {
        </ScrollView>
        </View>;
         break;
-       case '5': 
+       case '12': 
        return <View>
        <ScrollView horizontal>
        <LineChart
@@ -140,23 +128,17 @@ const LineGraph = () => {
     </View>
   );
 }
+
+const fetchData = async () => {
+  try{
+    const uid = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3'
+    
 ////////////////////그래프//////////////
 const data = {
   labels: ["Sun","Mon", "Tue", "Wed", "Thu", "Sat",],
   datasets: [
     {
       data: [30, 20, 45, 28, 80, 99, 43],
-      color: (opacity = 1) => `rgba(254, 166, 85, ${opacity})`, // optional
-      strokeWidth: 3 // optional
-    }
-  ],
-};
-
-const data2 = {
-  labels: ["week1","week2", "week3", "week4", ],
-  datasets: [
-    {
-      data: [30, 50, 45, 89, 80,],
       color: (opacity = 1) => `rgba(254, 166, 85, ${opacity})`, // optional
       strokeWidth: 3 // optional
     }
@@ -195,6 +177,7 @@ const data5 = {
     }
   ],
 };
+}
 //////////////////////////////////////
 
 const styles = StyleSheet.create({
