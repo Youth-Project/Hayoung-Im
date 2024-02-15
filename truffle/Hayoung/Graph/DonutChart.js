@@ -1,144 +1,144 @@
-import React, { useContext, useState } from "react";
-import { View, Text, TouchableOpacity , StyleSheet,AppRegistry,processColor,Dimensions} from 'react-native';
-import PieChart from 'react-native-pie-chart'
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import PieChart from 'react-native-pie-chart';
 import TruffleLogo from "../assets/logo/TruffleLogo.svg";
 import firestore from "@react-native-firebase/firestore";
 
 function DonutChart () {
-  const [userbudget, setUserBudget] = useState(0);
+  const [userBudget, setUserBudget] = useState(0);
   const [expenses, setExpenses] = useState({
-    eatOut: 0, //외식
-    shopping: 0, //장보기
-    delivery: 0, //배달
+    eatOut: 0, // 외식
+    shopping: 0, // 장보기
+    delivery: 0, // 배달
   });
   const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
   
   useEffect(() => {
     const fetchBudgetAndExpenses = async () => {
       try {
-        const userBudgetDoc = await firestore().collection("users").doc(userId).get();
-        const userBudgetData = userBudgetDoc.data();
-        setUserBudget(userBudgetData.user_budget || 0);
+        const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+        const userRef = firestore().collection('users').doc(userId);
+        const snapshot = await userRef.get();
+        if (snapshot.exists) {
+          const userData = snapshot.data();
+          const userBudget = userData.user_budget;
+          setUserBudget(userBudget || 0);
+        }
 
         const monthlyExpenseData = await fetchMonthlyExpenses();
         setExpenses(monthlyExpenseData);
       } catch (error) {
-      console.error("Error fetching budget and expenses: ", error);
+        console.error("Error fetching budget and expenses: ", error);
       }
     };
-    fetchBudgetAndExpense();
+    fetchBudgetAndExpenses();
   }, []);
 
   const fetchMonthlyExpenses = async () => {
-    const year = new Date().getFullYear();
-    const month = new Date().getMonth() + 1;
-    const startOfMonth = new Date(year, month-1, 1);
-    const endOfMonth = new Date(year, month, 0);
-    try{
-      const monthlyExpenseDoc = await firestore().collection(userId)
-      .where(firebase.firestore.FieldPath.documentId(), ">=", startOfMonth.toISOString().split('T')[0])
-      .where(firebase.firestore.FieldPath.documentId(), "<=", endOfMonth.toISOString().split('T')[0])
-      .get();
+    try {
+      const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+      const userRef = firestore().collection('users').doc(userId);
+      const snapshot = await userRef.get();
+      if (!snapshot.exists) {
+        throw new Error("No monthly expenses data found");
+      }
 
-      const monthlyExpense = {
+      const userData = snapshot.data();
+      const deliveryExpense = userData.delivery[0] || 0;
+      const shoppingExpense = userData.shopping[0] || 0;
+      const eatOutExpense = userData.eatOut[0] || 0;
+
+      return {
+        total: deliveryExpense + shoppingExpense + eatOutExpense,
+        delivery: deliveryExpense,
+        shopping: shoppingExpense,
+        eatOut: eatOutExpense,
+      };
+    } catch (error) {
+      console.error("Error fetching monthly expenses: ", error);
+      return {
         total: 0,
         delivery: 0,
         shopping: 0,
         eatOut: 0,
       };
-
-      monthlyExpenseDoc.forEach((items, index) => {
-        //이부분을 어케 수정하지...
-        const tag = tagArr[index];
-        items.nameArr.forEach((name, i) => {
-          const expense = items.quantityArr[i] * items.priceArr[i];
-          montlyExpense.total += expense;
-          if (tag === 'delivery') montlyExpense.delivery += expense;
-          else if (tag === 'shopping') montlyExpense.shopping += expense;
-          else if (tag === 'eatOut') montlyExpense.eatout += expense;
-      });
-    } catch (error) {
-      console.error("Error fetching monthly expenses: ", error);
     }
-    )}};
+  };
 
-    const calculateRemainingBudget = () => {
-      const totalExpense = Object.values(expenses).reduce((acc, expense) => acc + expense, 0);
-      return userBudget - totalExpense;
-    };
-  
-    const remainingBudget = calculateRemainingBudget();
-  
-    const totalBudget = userBudget;
-    const expensePercentages = {
-      eatOut: (expenses.eatOut / totalBudget) * 100,
-      shopping: (expenses.shopping / totalBudget) * 100,
-      delivery: (expenses.delivery / totalBudget) * 100,
-      extraBudget: (remainingBudget / totalBudget) * 100, //남은 금액
-    };
-  
-    const series = [
-      expensePercentages.shopping,
-      expensePercentages.delivery,
-      expensePercentages.eatOut,
-      expensePercentages.extraBudget,
-    ]
-    const sliceColor = ['#D55A44', '#FEA655', '#FFD98E', '#ABABAB']
-  
+  const calculateRemainingBudget = () => {
+    const total = expenses.eatOut + expenses.shopping + expenses.delivery;
+    return userBudget - total;
+  };
 
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.Texts}>
-          지출 통계
-        </Text>
-        <TruffleLogo style={Styles.Logo}/>
-        <View style={{alignItems:'center'}}>
+  const remainingBudget = calculateRemainingBudget();
+  const totalBudget = userBudget;
+  const { eatOut, shopping, delivery } = expenses;
+  const extraBudget = remainingBudget / totalBudget * 100;
+
+  const series = [
+    shopping / totalBudget * 100,
+    delivery / totalBudget * 100,
+    eatOut / totalBudget * 100,
+    extraBudget,
+  ];
+  const sliceColor = ['#D55A44', '#FEA655', '#FFD98E', '#ABABAB'];
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>
+        지출 통계
+      </Text>
+      <TruffleLogo style={styles.logo}/>
+      <View style={styles.chartContainer}>
         <PieChart
-            widthAndHeight={200}
-            series={series}
-            sliceColor={sliceColor}
-            coverRadius={0.65}
-            coverFill={'white'}
-          />
-          </View>
-          <View style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}} marginTop={20}>
-            <View style={[Styles.colorSlice,{backgroundColor:'#D55A44'}]}></View>
-            <Text >shopping</Text>
-            <View style={[Styles.colorSlice,{backgroundColor:'#FEA655'}]}></View>
-            <Text>delivery</Text>
-            <View style={[Styles.colorSlice,{backgroundColor:'#FFD98E'}]}></View>
-            <Text>eatOut</Text>
-          </View>
-
+          widthAndHeight={200}
+          series={series}
+          sliceColor={sliceColor}
+          coverRadius={0.65}
+          coverFill={'white'}
+        />
       </View>
-    );
-  }
+      <View style={styles.legendContainer}>
+        <View style={[styles.colorSlice,{backgroundColor:'#D55A44'}]}/>
+        <Text>장보기</Text>
+        <View style={[styles.colorSlice,{backgroundColor:'#FEA655'}]}/>
+        <Text>배달</Text>
+        <View style={[styles.colorSlice,{backgroundColor:'#FFD98E'}]}/>
+        <Text>외식</Text>
+      </View>
+    </View>
+  );
+}
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     width: Dimensions.get('window').width*0.9,
     height:Dimensions.get('window').height *0.35,
     backgroundColor: 'white',
     padding: 10,
     margin:20,
-    marginTop:20,
     borderColor:'black',
     borderRadius:12,
   },
-  Texts: {
+  text: {
     color: '#838383',
-    //fontFamily: 'NanumGothic, sans-serif',
     fontSize: 12,
     marginLeft: 10,
   },
-  chart: {
-    flex: 1
+  chartContainer: {
+    alignItems:'center',
   },
-  Logo:{
+  logo:{
     position: 'absolute',
     bottom: 130,
     left: Dimensions.get('window').width /2.6,
     zIndex:1,
+  },
+  legendContainer: {
+    flexDirection:'row',
+    justifyContent:'center',
+    alignItems:'center',
+    marginTop: 20,
   },
   colorSlice:{
     height:12,
@@ -146,7 +146,6 @@ const Styles = StyleSheet.create({
     marginRight:5,
     marginLeft:5
   }
-
-})
+});
 
 export default DonutChart;
