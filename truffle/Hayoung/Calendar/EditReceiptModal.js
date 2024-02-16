@@ -220,16 +220,35 @@ useEffect(() => {
 };
       const currentDate = new Date(date);
       const currentMonthIndex = currentDate.getMonth();
+      const currentYearIndex = currentDate.getFullYear();
+      const defaultMonthIndex = 2;
+      const defaultYearIndex = 2024;
+      let index = 0;
+
+      const monthCalculator = currentMonthIndex - defaultMonthIndex;
+      const yearCalculator = currentYearIndex - defaultYearIndex;
+
+      if (monthCalculator > 0 && yearCalculator === 0) {
+        index += monthCalculator;
+      } else if (monthCalculator < 0 && yearCalculator > 0) {
+        index = (index - monthCalculator) * yearCalculator;
+      } else if (monthCalculator === 0 && yearCalculator > 0) {
+        index = 12 * index;
+      } else if (monthCalculator === 0 && yearCalculator === 0){
+        index = 0;
+      } else {
+        index = monthCalculator * yearCalculator;
+      }
       const userRef = firestore().collection('users').doc(userId);
       
     const currentShoppingSnapshot = await userRef.get();
-    const currentShopping = currentShoppingSnapshot.data().shopping[currentMonthIndex] || 0;
+    const currentShopping = currentShoppingSnapshot.data().shopping[index] || 0;
 
     const currentEatOutSnapshot = await userRef.get();
-    const currentEatOut = currentEatOutSnapshot.data().eatOut[currentMonthIndex] || 0;
+    const currentEatOut = currentEatOutSnapshot.data().eatOut[index] || 0;
 
     const currentDeliverySnapshot = await userRef.get();
-    const currentDelivery = currentDeliverySnapshot.data().delivery[currentMonthIndex] || 0;
+    const currentDelivery = currentDeliverySnapshot.data().delivery[index] || 0;
 
       
     const updatedShopping = currentShopping + totalShopping;
@@ -237,9 +256,9 @@ useEffect(() => {
     const updatedDelivery = currentDelivery + totalDelivery;
 
       await userRef.update({
-        [`shopping.${currentMonthIndex}`]: updatedShopping,
-        [`eatOut.${currentMonthIndex}`]: updatedEatOut,
-        [`delivery.${currentMonthIndex}`]: updatedDelivery
+        [`shopping.${index}`]: updatedShopping,
+        [`eatOut.${index}`]: updatedEatOut,
+        [`delivery.${index}`]: updatedDelivery
       });
       
   await firestore().collection(userId).doc(date).set(data);
