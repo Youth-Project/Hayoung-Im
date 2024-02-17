@@ -4,6 +4,8 @@ import PieChart from 'react-native-pie-chart';
 import TruffleLogo from "../assets/logo/TruffleLogo.svg";
 import firestore from "@react-native-firebase/firestore";
 
+const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
+
 function DonutChart () {
   const [userBudget, setUserBudget] = useState(0);
   const [expenses, setExpenses] = useState({
@@ -11,54 +13,62 @@ function DonutChart () {
     shopping: 0, // 장보기
     delivery: 0, // 배달
   });
-  const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
-  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchBudgetAndExpenses = async () => {
+    const fetchData = async () => {
       try {
-        const userBudgetDoc = await firestore().collection("users").doc(userId).get();
-        const userBudgetData = userBudgetDoc.data();
-        setUserBudget(userBudgetData.user_budget || 0);
+        const userDoc = await firestore().collection("users").doc(userId).get();
+        const userData = userDoc.data();
+        setUserBudget(userData.user_budget || 0);
 
         const monthlyExpenseData = await fetchMonthlyExpenses();
         setExpenses(monthlyExpenseData);
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching budget and expenses: ", error);
+        console.error("Error fetching data: ", error);
+        setLoading(false);
       }
     };
-    fetchBudgetAndExpenses();
+    fetchData();
   }, []);
 
   const fetchMonthlyExpenses = async () => {
-  try {
-    const userId = 'xxvkRzKqFcWLVx4hWCM8GgQf1hE3';
-    const userRef = firestore().collection('users').doc(userId);
-    const snapshot = await userRef.get();
-    if (!snapshot.exists) {
-      throw new Error("No monthly expenses data found");
+    try {
+      const userRef = firestore().collection('users').doc(userId);
+      const snapshot = await userRef.get();
+      if (!snapshot.exists) {
+        throw new Error("No monthly expenses data found");
+      }
+
+      const userData = snapshot.data();
+      const currentMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+      const currentMonthData = {
+        eatOut: userData.eatOut[currentMonthKey] || 0,
+        shopping: userData.shopping[currentMonthKey] || 0,
+        delivery: userData.delivery[currentMonthKey] || 0,
+      };
+
+      const total = currentMonthData.eatOut + currentMonthData.shopping + currentMonthData.delivery;
+
+      return {
+        ...currentMonthData,
+        total: total,
+      };
+    } catch (error) {
+      console.error("Error fetching monthly expenses: ", error);
+      return {
+        eatOut: 0,
+        shopping: 0,
+        delivery: 0,
+        total: 0,
+      };
     }
+  };
 
-    const userData = snapshot.data();
-    const deliveryExpense = userData.delivery[userData.delivery.length - 1] || 0;
-    const shoppingExpense = userData.shopping[userData.shopping.length - 1] || 0;
-    const eatOutExpense = userData.eatOut[userData.eatOut.length - 1] || 0;
-
-    return {
-      total: deliveryExpense + shoppingExpense + eatOutExpense,
-      delivery: deliveryExpense,
-      shopping: shoppingExpense,
-      eatOut: eatOutExpense,
-    };
-  } catch (error) {
-    console.error("Error fetching monthly expenses: ", error);
-    return {
-      total: 0,
-      delivery: 0,
-      shopping: 0,
-      eatOut: 0,
-    };
+  if (loading) {
+    return <Text>Loading...</Text>;
   }
-};
 
   const calculateRemainingBudget = () => {
     const total = expenses.eatOut + expenses.shopping + expenses.delivery;
