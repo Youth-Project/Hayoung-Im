@@ -219,26 +219,9 @@ useEffect(() => {
   memo: memo
 };
       const currentDate = new Date(date);
-      const currentMonthIndex = currentDate.getMonth();
-      const currentYearIndex = currentDate.getFullYear();
-      const defaultMonthIndex = 2;
-      const defaultYearIndex = 2024;
-      let index = 0;
-
-      const monthCalculator = currentMonthIndex - defaultMonthIndex;
-      const yearCalculator = currentYearIndex - defaultYearIndex;
-
-      if (monthCalculator > 0 && yearCalculator === 0) {
-        index += monthCalculator;
-      } else if (monthCalculator < 0 && yearCalculator > 0) {
-        index = (index - monthCalculator) * yearCalculator;
-      } else if (monthCalculator === 0 && yearCalculator > 0) {
-        index = 12 * index;
-      } else if (monthCalculator === 0 && yearCalculator === 0){
-        index = 0;
-      } else {
-        index = monthCalculator * yearCalculator;
-      }
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      const index = `${String(currentYear)}-${String(currentMonth).padStart(2, '0')}`
       const userRef = firestore().collection('users').doc(userId);
       
     const currentShoppingSnapshot = await userRef.get();
